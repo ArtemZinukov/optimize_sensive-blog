@@ -34,9 +34,9 @@ def get_likes_count(post):
 
 def index(request):
 
-    most_popular_posts = list(Post.objects.annotate(num_posts=Count('likes')).order_by('-num_posts')[:5])
+    most_popular_posts = list(Post.objects.prefetch_related('author').annotate(num_posts=Count('likes')).order_by('-num_posts')[:5])
 
-    fresh_posts = Post.objects.order_by('published_at')
+    fresh_posts = Post.objects.prefetch_related('author').order_by('published_at')
     most_fresh_posts = list(fresh_posts)[-5:]
 
     most_popular_tags = list(Tag.objects.annotate(num_tags=Count('posts')).order_by('-num_tags')[:5:-1])
@@ -53,7 +53,7 @@ def index(request):
 
 def post_detail(request, slug):
     post = Post.objects.get(slug=slug)
-    comments = Comment.objects.filter(post=post)
+    comments = Comment.objects.filter(post=post).select_related('author')
     serialized_comments = []
     for comment in comments:
         serialized_comments.append({
