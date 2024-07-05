@@ -46,6 +46,7 @@ class Post(models.Model):
         'Tag',
         related_name='posts',
         verbose_name='Теги')
+
     objects = PostQuerySet.as_manager()
 
     def __str__(self):
@@ -87,6 +88,7 @@ class Comment(models.Model):
         related_name='comments')
     author = models.ForeignKey(
         User,
+        related_name='author_comment',
         on_delete=models.CASCADE,
         verbose_name='Автор')
 
@@ -100,4 +102,3 @@ class Comment(models.Model):
         ordering = ['published_at']
         verbose_name = 'комментарий'
         verbose_name_plural = 'комментарии'
-
