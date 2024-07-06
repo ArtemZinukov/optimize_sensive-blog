@@ -57,7 +57,7 @@ def post_detail(request, slug):
     except Post.DoesNotExist:
         return HttpResponseNotFound('<h1>Такой пользователь не найден</h1>')
 
-    comments = Comment.objects.filter(post=post).select_related('author')
+    comments = post.comments.all().select_related('author')
 
     serialized_comments = []
     for comment in comments:
