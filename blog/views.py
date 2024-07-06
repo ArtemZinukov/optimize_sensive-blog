@@ -1,6 +1,9 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponseNotFound
 from django.shortcuts import render
 from blog.models import Comment, Post, Tag
 from django.db.models import Count, Prefetch
+from django.shortcuts import get_object_or_404
 
 
 def serialize_tag(tag):
@@ -49,7 +52,10 @@ def index(request):
 def post_detail(request, slug):
     prefetch = Prefetch('tags', queryset=Tag.objects.annotate(num_tags=Count("posts")))
 
-    post = Post.objects.select_related('author').prefetch_related(prefetch).get(slug=slug)
+    try:
+        post = Post.objects.select_related('author').prefetch_related(prefetch).get(slug=slug)
+    except Post.DoesNotExist:
+        return HttpResponseNotFound('<h1>Такой пользователь не найден</h1>')
 
     comments = Comment.objects.filter(post=post).select_related('author')
 
@@ -95,7 +101,7 @@ def post_detail(request, slug):
 def tag_filter(request, tag_title):
     prefetch = Prefetch('tags', queryset=Tag.objects.annotate(num_tags=Count("posts")))
 
-    tag = Tag.objects.get(title=tag_title)
+    tag = get_object_or_404(Tag, title=tag_title)
 
     most_popular_tags = Tag.objects.popular()[:5]
 
