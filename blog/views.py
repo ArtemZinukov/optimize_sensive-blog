@@ -59,6 +59,15 @@ def post_detail(request, slug):
 
     comments = post.comments.all().select_related('author')
 
+    likes = post.likes.all().select_related('author')
+
+    related_tags = post.tags.annotate(num_tags=Count('posts'))
+
+    most_popular_tags = Tag.objects.popular()[:5]
+
+    most_popular_posts = (Post.objects.popular().select_related('author').prefetch_related(prefetch)[:5]
+                          .fetch_with_comments_count())
+
     serialized_comments = []
     for comment in comments:
         serialized_comments.append({
@@ -67,26 +76,17 @@ def post_detail(request, slug):
             'author': comment.author.username,
         })
 
-    likes = post.likes.all()
-
-    related_tags = post.tags.annotate(num_tags=Count('posts'))
-
     serialized_post = {
         'title': post.title,
         'text': post.text,
         'author': post.author.username,
         'comments': serialized_comments,
-        'likes_amount': len(likes),
+        'likes_amount': likes.count(),
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
         'tags': [serialize_tag(tag) for tag in related_tags],
     }
-
-    most_popular_tags = Tag.objects.popular()[:5]
-
-    most_popular_posts = (Post.objects.popular().select_related('author').prefetch_related(prefetch)[:5]
-                          .fetch_with_comments_count())
 
     context = {
         'post': serialized_post,
