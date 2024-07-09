@@ -52,10 +52,7 @@ def index(request):
 def post_detail(request, slug):
     prefetch = Prefetch('tags', queryset=Tag.objects.annotate_tags_with_post_count())
 
-    try:
-        post = Post.objects.select_related('author').prefetch_related(prefetch).get(slug=slug)
-    except Post.DoesNotExist:
-        return HttpResponseNotFound('<h1>Такой пользователь не найден</h1>')
+    post = get_object_or_404(Post, slug=slug)
 
     comments = post.comments.all().select_related('author')
 
