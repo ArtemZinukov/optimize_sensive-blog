@@ -1,5 +1,3 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponseNotFound
 from django.shortcuts import render
 from blog.models import Comment, Post, Tag
 from django.db.models import Count, Prefetch
@@ -33,9 +31,8 @@ def index(request):
     most_popular_posts = (Post.objects.popular().select_related('author').prefetch_related(prefetch)[:5]
                           .fetch_with_comments_count())
 
-    most_fresh_posts = Post.objects.select_related('author').prefetch_related(prefetch).annotate(
-        num_comments=Count('comments', distinct=True)
-    ).order_by('-published_at')[:5]
+    most_fresh_posts = (Post.objects.select_related('author').prefetch_related(prefetch)[:5]
+                        .fetch_with_comments_count())
 
     most_popular_tags = Tag.objects.popular()[:5]
 
