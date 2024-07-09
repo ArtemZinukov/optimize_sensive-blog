@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from blog.models import Comment, Post, Tag
-from django.db.models import Count, Prefetch
+from blog.models import Post, Tag
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 
 
@@ -51,7 +51,7 @@ def post_detail(request, slug):
 
     comments = post.comments.all().select_related('author')
 
-    likes = post.likes.all().select_related('author')
+    posts = Post.objects.annotate(num_likes=Count("likes")).get(slug=slug)
 
     related_tags = post.tags.annotate(num_tags=Count('posts'))
 
@@ -73,7 +73,7 @@ def post_detail(request, slug):
         'text': post.text,
         'author': post.author.username,
         'comments': serialized_comments,
-        'likes_amount': likes.count(),
+        'likes_amount': posts.num_likes,
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
@@ -99,7 +99,8 @@ def tag_filter(request, tag_title):
     most_popular_posts = (Post.objects.popular().select_related('author').annotate_tags_with_post_count()[:5]
                           .fetch_with_comments_count())
 
-    related_posts = tag.posts.all().select_related('author').annotate_tags_with_post_count()[:20].fetch_with_comments_count()
+    related_posts = (tag.posts.all().select_related('author').annotate_tags_with_post_count()[:20]
+                     .fetch_with_comments_count())
 
     context = {
         'tag': tag.title,
