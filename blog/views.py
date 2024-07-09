@@ -53,11 +53,6 @@ def post_detail(request, slug):
 
     related_tags = post.tags.popular()
 
-    most_popular_tags = Tag.objects.popular()[:5]
-
-    most_popular_posts = (Post.objects.popular().select_related('author').annotate_tags_with_post_count()[:5]
-                          .fetch_with_comments_count())
-
     serialized_comments = []
     for comment in comments:
         serialized_comments.append({
@@ -77,6 +72,11 @@ def post_detail(request, slug):
         'slug': post.slug,
         'tags': [serialize_tag(tag) for tag in related_tags],
     }
+
+    most_popular_tags = Tag.objects.popular()[:5]
+
+    most_popular_posts = (Post.objects.popular().select_related('author').annotate_tags_with_post_count()[:5]
+                          .fetch_with_comments_count())
 
     context = {
         'post': serialized_post,
